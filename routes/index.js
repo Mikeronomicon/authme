@@ -54,6 +54,16 @@ router.post('/register', function(request, response) {
       password_confirm = request.body.password_confirm,
       database = app.get('database');
 
+      database('users').where({'username': username}).then(function(res){
+        if(res.length > 0){
+          response.render('index', {
+            title: "Log in or be Denied!",
+            user: null, 
+            error: "This name is already taken, please be more original."
+          });
+        return;
+        };
+
   if (password === password_confirm) {
     /*
     This will insert a new record into the users table. The insert
@@ -89,8 +99,9 @@ router.post('/register', function(request, response) {
       title: 'Authorize Me!',
       user: null,
       error: "Password didn't match confirmation"
-    });
-  }
+      });
+    }
+  });
 });
 
 /*
@@ -127,7 +138,7 @@ router.post('/login', function(request, response) {
     */
     if (records.length === 0) {
         response.render('index', {
-          title: 'Authorize Me!',
+          title: "You don't exist!",
           user: null,
           error: "No such user"
         });
@@ -148,9 +159,9 @@ router.post('/login', function(request, response) {
         index page, with an error telling the user what happened.
         */
         response.render('index', {
-          title: 'Authorize Me!',
+          title: 'ERROR!',
           user: null,
-          error: "Password incorrect"
+          error: "Learn how to type, you jackass!"
         });
       }
     }

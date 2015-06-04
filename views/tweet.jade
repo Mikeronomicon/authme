@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1= title
+    div
+      form(method="post" action="tweet")
+        div
+          label Be a twat:
+            input(type="text" name="tweet" placeholder="twat")
