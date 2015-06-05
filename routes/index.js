@@ -18,14 +18,17 @@ router.get('/', function(request, response, next) {
   if (request.cookies.username) {
     var database = app.get('database');
     
-    var tweets = [{body: 'hello'}];
-    response.render('tweets/index', { title: 'Welcome Dicks!', tweets: tweets });
+
     // database.select('body').from('tweets').then(function (resp) {
     //   var tweets = resp.rows;
 
   } else {
     response.render('index', { title: 'Welcome Dicks!' });
   }
+    var knex = app.get('database');
+    knex('tweet').select().then(function(tweets) {
+    response.render('tweets/index', { title: 'Welcome Dicks!', tweets: tweets });
+  })
 });
 
 router.post('/', function (request, response) {
@@ -43,12 +46,12 @@ router.post('/', function (request, response) {
     username = null;
   }
 
-  database('tweets').insert({
-    body: params.body,
-    users_id: 26
-  }).then(function() {
-    response.redirect('/')
-  });
+  // database('tweets').insert({
+  //   body: params.body,
+  //   users_id: 26
+  // }).then(function() {
+  //   response.redirect('/')
+  // });
 });
 
 // function currentUser (request) {
@@ -129,6 +132,7 @@ router.post('/register', function(request, response) {
               browser to send another request that hits that GET handler.
               */
               response.cookie('username', username)
+              response.cookie('user_id', user_id)
               response.redirect('/');
             });
           } else {
@@ -209,5 +213,19 @@ router.post('/login', function(request, response) {
     }
   });
 });
+
+router.post('/tweets', function(request, response) {
+  var tweets = request.body.tweets,
+  database = app.get('database'),
+  users_id = request.cookies.user_id;
+
+  database('tweet').insert({
+    tweets: tweets,
+    users_id: users_id,
+  }).then(function() {
+    response.redirect('/');
+    
+    });
+  });
 
 module.exports = router;
