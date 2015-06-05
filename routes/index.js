@@ -18,7 +18,7 @@ router.get('/', function(request, response, next) {
   if (request.cookies.username) {
     var database = app.get('database');
     
-    var tweets = [{body: 'hello'}, {body: 'terry cloth'}];
+    var tweets = [{body: 'hello'}];
     response.render('tweets/index', { title: 'Welcome Dicks!', tweets: tweets });
     // database.select('body').from('tweets').then(function (resp) {
     //   var tweets = resp.rows;
@@ -45,8 +45,7 @@ router.post('/', function (request, response) {
 
   database('tweets').insert({
     body: params.body,
-    //posted_at: Date.now().toUTCString(),
-    //users_id: users_id
+    users_id: 26
   }).then(function() {
     response.redirect('/')
   });
