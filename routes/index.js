@@ -7,6 +7,31 @@ This is a request handler for loading the main page. It will check to see if
 a user is logged in, and render the index page either way.
 */
 router.get('/', function(request, response, next) {
+  /*
+  Check to see if a user is logged in. If they have a cookie called
+  "username," assume it contains their username
+  */
+  /*
+  render the index page. The username variable will be either null
+  or a string indicating the username.
+  */
+  if (request.cookies.username) {
+    var database = app.get('database');
+    
+    var tweets = [{body: 'hello'}, {body: 'terry cloth'}];
+    response.render('tweets/index', { title: 'Welcome Dicks!', tweets: tweets });
+    // database.select('body').from('tweets').then(function (resp) {
+    //   var tweets = resp.rows;
+
+  } else {
+    response.render('index', { title: 'Welcome Dicks!' });
+  }
+});
+
+router.post('/', function (request, response) {
+  var database = app.get('database');
+  var params = request.body;
+
   var username;
   /*
   Check to see if a user is logged in. If they have a cookie called
@@ -17,12 +42,20 @@ router.get('/', function(request, response, next) {
   } else {
     username = null;
   }
-  /*
-  render the index page. The username variable will be either null
-  or a string indicating the username.
-  */
-  response.render('index', { title: 'Authorize Me!', username: username });
+
+  database('tweets').insert({
+    body: params.body,
+    //posted_at: Date.now().toUTCString(),
+    //users_id: users_id
+  }).then(function() {
+    response.redirect('/')
+  });
 });
+
+// function currentUser (request) {
+//   // Returns true if there is a user cookie
+//   // Redirects to login if there isnt
+// }
 
 /*
 This is the request handler for receiving a registration request. It will
@@ -54,54 +87,64 @@ router.post('/register', function(request, response) {
       password_confirm = request.body.password_confirm,
       database = app.get('database');
 
-      database('users').where({'username': username}).then(function(res){
-        if(res.length > 0){
-          response.render('index', {
-            title: "Log in or be Denied!",
-            user: null, 
-            error: "This name is already taken, please be more original."
-          });
-        return;
-        };
+      database('users')
+        .where({'username': username})
+        .then(function authenticate(res) {
+          if(res.length > 0) {
+            response.render('index', 
+            {
+              title: "Log in or be Denied!",
+              user: null, 
+              error: "This name is already taken, please be more original."
+            });
+            return;
+          };
 
-  if (password === password_confirm) {
-    /*
-    This will insert a new record into the users table. The insert
-    function takes an object whose keys are column names and whose values
-    are the contents of the record.
+          if (!password || !username) {
+            response.render('index', {
+              user: null,
+              error: 'Learn how to follow instructions. Fill out the damn form.'
+            });
+          };
 
-    This uses a "promise" interface. It's similar to the callbacks we've
-    worked with before. insert({}).then(function() {...}) is very similar
-    to insert({}, function() {...});
-    */
-    database('users').insert({
-      username: username,
-      password: password,
-    }).then(function() {
-      /*
-      Here we set a "username" cookie on the response. This is the cookie
-      that the GET handler above will look at to determine if the user is
-      logged in.
+          if (password === password_confirm) {
+            /*
+            This will insert a new record into the users table. The insert
+            function takes an object whose keys are column names and whose values
+            are the contents of the record.
 
-      Then we redirect the user to the root path, which will cause their
-      browser to send another request that hits that GET handler.
-      */
-      response.cookie('username', username)
-      response.redirect('/');
-    });
-  } else {
-    /*
-    The user mistyped either their password or the confirmation, or both.
-    Render the index page again, with an error message telling them what's
-    wrong.
-    */
-    response.render('index', {
-      title: 'Authorize Me!',
-      user: null,
-      error: "Password didn't match confirmation"
-      });
-    }
-  });
+            This uses a "promise" interface. It's similar to the callbacks we've
+            worked with before. insert({}).then(function() {...}) is very similar
+            to insert({}, function() {...});
+            */
+            database('users').insert({
+              username: username,
+              password: password,
+            }).then(function() {
+              /*
+              Here we set a "username" cookie on the response. This is the cookie
+              that the GET handler above will look at to determine if the user is
+              logged in.
+
+              Then we redirect the user to the root path, which will cause their
+              browser to send another request that hits that GET handler.
+              */
+              response.cookie('username', username)
+              response.redirect('/');
+            });
+          } else {
+            /*
+            The user mistyped either their password or the confirmation, or both.
+            Render the index page again, with an error message telling them what's
+            wrong.
+            */
+            response.render('index', {
+              title: 'Authorize Me!',
+              user: null,
+              error: "Password didn't match confirmation"
+            });
+          }
+        });
 });
 
 /*

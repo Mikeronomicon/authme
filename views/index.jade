@@ -4,32 +4,29 @@ block content
   h1= title
   if error
     h3= error
-  if username
-    p You are currently logged in as #{ username }
-  else
-    p You are not logged in. Would you like to be?
-    div
-      form(method="post" action="/register")
-        h2 Register a new account
-        div
-          label Username:
-            input(type="text" name="username" placeholder="username")
-        div
-          label Password:
-            input(type="password" name="password")
-        div
-          label Confirm Password:
-            input(type="password" name="password_confirm")
-        div
-          input(type="submit" value="Pleased to meet you!")
-    div
-      form(method="post" action="/login")
-        h2 Log into an existing account
-        div
-          label Username:
-            input(type="text" name="username" placeholder="username")
-        div
-          label Password:
-            input(type="password" name="password")
-        div
-          input(type="submit" value="Let me in!")
+  p You are not logged in. Would you like to be?
+  div
+    form(method="post" action="/register")
+      h2 Register a new account
+      div
+        label Username:
+          input(type="text" name="username" placeholder="username")
+      div
+        label Password:
+          input(type="password" name="password")
+      div
+        label Confirm Password:
+          input(type="password" name="password_confirm")
+      div
+        input(type="submit" value="Pleased to meet you!")
+  div
+    form(method="post" action="/login")
+      h2 Log into an existing account
+      div
+        label Username:
+          input(type="text" name="username" placeholder="username")
+      div
+        label Password:
+          input(type="password" name="password")
+      div
+        input(type="submit" value="Let me in!")
