@@ -6,15 +6,16 @@ block content
     h3= error
   div
     form(method="post" action="/tweets")
-      h2 Be a twat:
+      h2 Welcome to twatter:
       div
         label 0 to asshole in 140 characters or less: 
           input(type="text" name="tweets" placeholder="twat")
-          input(type="submit" value="I'm a shmuck")
+          input(type="submit" value="sorry, not sorry")
 
     each tweet in tweets
       div
           img.user-logo(src="http://placekitten.com/g/64/64")
+          span.user= tweet.username
           span.tweet= tweet.tweets
         div.tweet-body
         div.posted-at

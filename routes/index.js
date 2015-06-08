@@ -23,11 +23,11 @@ router.get('/', function(request, response, next) {
     //   var tweets = resp.rows;
 
   } else {
-    response.render('index', { title: 'Welcome Dicks!' });
+    response.render('index', { title: 'Be nice or else!' });
   }
     var knex = app.get('database');
     knex('tweet').select().then(function(tweets) {
-    response.render('tweets/index', { title: 'Welcome Dicks!', tweets: tweets });
+    response.render('tweets/index', { title: "Don't be a dick!", tweets: tweets });
   })
 });
 
@@ -97,7 +97,7 @@ router.post('/register', function(request, response) {
             {
               title: "Log in or be Denied!",
               user: null, 
-              error: "This name is already taken, please be more original."
+              error: "This name is already taken, please select something less stupid."
             });
             return;
           };
@@ -198,6 +198,7 @@ router.post('/login', function(request, response) {
         acknowledge that they're logged in.
         */
         response.cookie('username', username);
+        response.cookie('user_id', user_id);
         response.redirect('/');
       } else {
         /*
@@ -222,6 +223,7 @@ router.post('/tweets', function(request, response) {
   database('tweet').insert({
     tweets: tweets,
     users_id: users_id,
+    posted_at: new Date(Date.now())
   }).then(function() {
     response.redirect('/');
     
