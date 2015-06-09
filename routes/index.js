@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
-var app = require('../app')
+var uuid = require('node-uuid');
+var app = require('../app');
+var nodemailer = require('nodemailer');
 
 /*
 This is a request handler for loading the main page. It will check to see if
@@ -18,17 +20,17 @@ router.get('/', function(request, response, next) {
   if (request.cookies.username) {
     var database = app.get('database');
     
+    var knex = app.get('database');
+    knex('tweet').select().then(function(tweets) {
+     response.render('tweets/index', { title: "Don't be a dick!", tweets: tweets });
+    })
 
     // database.select('body').from('tweets').then(function (resp) {
     //   var tweets = resp.rows;
 
   } else {
-    response.render('index', { title: 'Be nice or else!' });
+    response.render('index', { title: 'No really, login!' });
   }
-    var knex = app.get('database');
-    knex('tweet').select().then(function(tweets) {
-    response.render('tweets/index', { title: "Don't be a dick!", tweets: tweets });
-  })
 });
 
 router.post('/', function (request, response) {
@@ -42,16 +44,9 @@ router.post('/', function (request, response) {
   */
   if (request.cookies.username) {
     username = request.cookies.username;
-  } else {
-    username = null;
-  }
-
-  // database('tweets').insert({
-  //   body: params.body,
-  //   users_id: 26
-  // }).then(function() {
-  //   response.redirect('/')
-  // });
+      } else {
+      username = null;
+    }
 });
 
 // function currentUser (request) {
@@ -59,18 +54,8 @@ router.post('/', function (request, response) {
 //   // Redirects to login if there isnt
 // }
 
-/*
-This is the request handler for receiving a registration request. It will
-check to see if the password and confirmation match, and then create a new
-user with the given username.
 
-It has some bugs:
 
-* if someone tries to register a username that's already in use, this handler
-  will blithely let that happen.
-* If someone enters an empty username and/or password, it'll accept them
-  without complaint.
-*/
 router.post('/register', function(request, response) {
   /*
   request.body is an object containing the data submitted from the form.
@@ -119,6 +104,16 @@ router.post('/register', function(request, response) {
             worked with before. insert({}).then(function() {...}) is very similar
             to insert({}, function() {...});
             */
+            //validate email via nonce
+            
+            var nonce = uuid.v4();
+            var mailBody = createVerificationEmail(nonce);
+            sendMail(user.email, mailBody, function() {
+              redisClient.set(nonce, user.id, function() {
+                response.redirect('/authenticate');
+              });
+            });
+
             database('users').insert({
               username: username,
               password: password,
