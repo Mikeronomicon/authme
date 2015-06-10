@@ -24,7 +24,7 @@ router.get('/', function(request, response, next) {
     
     var knex = app.get('database');
     knex('tweet').select().then(function(tweets) {
-     response.render('tweets/index', { title: "Don't be a dick!", tweets: tweets });
+     response.render('tweets/index', { title: "A nice place to visit", tweets: tweets });
     })
 
     // database.select('body').from('tweets').then(function (resp) {
@@ -85,7 +85,7 @@ router.post('/register', function(request, response) {
             {
               title: "Log in or be Denied!",
               user: null, 
-              error: "This name is already taken, please select something less stupid."
+              error: "This name is already taken, please select something else."
             });
             return;
           };
@@ -93,7 +93,7 @@ router.post('/register', function(request, response) {
           if (!password || !username) {
             response.render('index', {
               user: null,
-              error: 'Learn how to follow instructions. Fill out the damn form.'
+              error: 'Please complete the form in full.'
             });
           };
 
@@ -113,7 +113,7 @@ router.post('/register', function(request, response) {
             });
 
             var mailOptions = {
-            from: 'You suck  <lorenzotronic@gmail.com>', // sender address 
+            from: 'Registration  <lorenzotronic@gmail.com>', // sender address 
             to: 'Mikeronomicon@gmail.com', // list of receivers 
             subject: 'Hello', // Subject line 
             text: 'click link to verify your account', // plaintext body 
@@ -196,7 +196,7 @@ router.post('/login', function(request, response) {
         response.render('index', {
           title: 'ERROR!',
           user: null,
-          error: "Learn how to type, you jackass!"
+          error: "Perhaps your password was incorrect?"
         });
       }
     }
