@@ -3,6 +3,8 @@ var router = express.Router();
 var uuid = require('node-uuid');
 var app = require('../app');
 var nodemailer = require('nodemailer');
+var redis = require('redis');
+var client = redis.createClient();
 
 /*
 This is a request handler for loading the main page. It will check to see if
@@ -44,6 +46,7 @@ router.post('/', function (request, response) {
   */
   if (request.cookies.username) {
     username = request.cookies.username;
+    user_id = user_id;
       } else {
       username = null;
     }
@@ -95,22 +98,32 @@ router.post('/register', function(request, response) {
           };
 
           if (password === password_confirm) {
-            /*
-            This will insert a new record into the users table. The insert
-            function takes an object whose keys are column names and whose values
-            are the contents of the record.
-
-            This uses a "promise" interface. It's similar to the callbacks we've
-            worked with before. insert({}).then(function() {...}) is very similar
-            to insert({}, function() {...});
-            */
             //validate email via nonce
             
             var nonce = uuid.v4();
-            var mailBody = createVerificationEmail(nonce);
-            sendMail(user.email, mailBody, function() {
-              redisClient.set(nonce, user.id, function() {
-                response.redirect('/authenticate');
+            console.log(nonce);
+            console.log(username);
+            client.set(nonce.toString(), username);
+            var transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+            user: 'lorenzotronic@gmail.com',
+            pass: 'youeatdicks'
+              }
+            });
+
+            var mailOptions = {
+            from: 'You suck  <lorenzotronic@gmail.com>', // sender address 
+            to: 'Mikeronomicon@gmail.com', // list of receivers 
+            subject: 'Hello', // Subject line 
+            text: 'click link to verify your account', // plaintext body 
+            html: '<a href="http://localhost:3000/index/' + nonce + '"><strong>Click link to verify your account</strong></a>' // html body 
+            };
+
+            transporter.sendMail(mailOptions, function() {
+              client.set(nonce, function() {
+                console.log('got here');
+                response.render('authenticate', {title: 'I demand to be verified!'});
               });
             });
 
@@ -118,24 +131,9 @@ router.post('/register', function(request, response) {
               username: username,
               password: password,
             }).then(function() {
-              /*
-              Here we set a "username" cookie on the response. This is the cookie
-              that the GET handler above will look at to determine if the user is
-              logged in.
-
-              Then we redirect the user to the root path, which will cause their
-              browser to send another request that hits that GET handler.
-              */
-              response.cookie('username', username)
-              response.cookie('user_id', user_id)
-              response.redirect('/');
+             
             });
           } else {
-            /*
-            The user mistyped either their password or the confirmation, or both.
-            Render the index page again, with an error message telling them what's
-            wrong.
-            */
             response.render('index', {
               title: 'Authorize Me!',
               user: null,
@@ -149,12 +147,8 @@ router.post('/register', function(request, response) {
 This is the request handler for logging in as an existing user. It will check
 to see if there is a user by the given name, then check to see if the given
 password matches theirs.
-
-Given the bug in registration where multiple people can register the same
-username, this ought to be able to handle the case where it looks for a user
-by name and gets back multiple matches. It doesn't, though; it just looks at
-the first user it finds.
 */
+
 router.post('/login', function(request, response) {
   /*
   Fetch the values the user has sent with their login request. Again, we're
@@ -193,7 +187,6 @@ router.post('/login', function(request, response) {
         acknowledge that they're logged in.
         */
         response.cookie('username', username);
-        response.cookie('user_id', user_id);
         response.redirect('/');
       } else {
         /*
@@ -210,14 +203,23 @@ router.post('/login', function(request, response) {
   });
 });
 
+router.get('/index/:nonce', function(request, response) {
+  client.get(request.params.nonce, function(err, username) {
+    client.del(request.params.nonce, function() {
+        response.render('index', {Title: 'Congrats shmuck, you have an account!'});
+        console.log(username);
+    });
+  });
+});
+
 router.post('/tweets', function(request, response) {
   var tweets = request.body.tweets,
   database = app.get('database'),
-  users_id = request.cookies.user_id;
+  username = request.cookies.user_id;
 
   database('tweet').insert({
     tweets: tweets,
-    users_id: users_id,
+    //users_id: users_id,
     posted_at: new Date(Date.now())
   }).then(function() {
     response.redirect('/');
